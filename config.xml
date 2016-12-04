@@ -1,11 +1,10 @@
-<widget xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0" id="es.uem.tfg.trasano" version="0.0.1">
+<widget xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0" id="es.uem.tfg.trasano-driver" version="0.0.1">
   <name>trasano-driver</name>
-  <description>Transporte Sanitario no Urgente</description>
+  <description>Transporte Sanitario no Urgente (Driver)</description>
   <author href="http://trasano.esy.es" email="trasano.uem@gmail.com">Trasano Team</author>
   <content src="index.html"/>
   <preference name="DisallowOverscroll" value="true"/>
   <preference name="android-minSdkVersion" value="14"/>
-  <preference name="Orientation" value="portrait" />
   <plugin name="cordova-plugin-battery-status" source="npm" spec="~1.1.1"/>
   <plugin name="cordova-plugin-camera" source="npm" spec="~2.1.1"/>
   <plugin name="cordova-plugin-media-capture" source="npm" spec="~1.2.0"/>
