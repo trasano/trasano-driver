@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<!--
+    Copyright (c) 2012-2016 Adobe Systems Incorporated. All rights reserved.
+
+    Licensed to the Apache Software Foundation (ASF) under one
+    or more contributor license agreements.  See the NOTICE file
+    distributed with this work for additional information
+    regarding copyright ownership.  The ASF licenses this file
+    to you under the Apache License, Version 2.0 (the
+    "License"); you may not use this file except in compliance
+    with the License.  You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+    Unless required by applicable law or agreed to in writing,
+    software distributed under the License is distributed on an
+    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+     KIND, either express or implied.  See the License for the
+    specific language governing permissions and limitations
+    under the License.
+-->
+<html lang="es">
+
+<head>
+    <meta charset="utf-8"/>
+    <meta name="format-detection" content="telephone=no" />
+    <meta name="msapplication-tap-highlight" content="no" />
+    <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width" />
+    
+    <!-- This is a wide open CSP declaration. To lock this down for production, see below. -->
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src * 'unsafe-inline'; style-src 'self' 'unsafe-inline'; media-src *" /> -->
+    <!-- Good default declaration:
+    * gap: is required only on iOS (when using UIWebView) and is needed for JS->native communication
+    * https://ssl.gstatic.com is required only on Android and is needed for TalkBack to function properly
+    * Disables use of eval() and inline scripts in order to mitigate risk of XSS vulnerabilities. To change this:
+        * Enable inline JS: add 'unsafe-inline' to default-src
+        * Enable eval(): add 'unsafe-eval' to default-src
+    * Create your own at http://cspisawesome.com
+    -->
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: gap: 'unsafe-inline' https://ssl.gstatic.com; style-src 'self' 'unsafe-inline'; media-src *" /> -->
+
+    <!-- Bootstrap core CSS -->
+    <link href="dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom styles for this template -->
+    <!-- <link href="dist/css/navbar-static-top.css" rel="stylesheet"> -->
+    <link href="dist/css/trasano.css" rel="stylesheet">
+
+    <!-- JApache Cordova Library -->
+    <script type="text/javascript" src="cordova.js"></script>  
+
+    <!-- JQuery-mobile -->
+    <script src="http://code.jquery.com/jquery-1.9.1.min.js"></script>
+
+    <!-- Custom library -->
+    <script type="text/javascript" src="js/trasano.js"></script>
+    <script type="text/javascript" src="resource/config.js"></script> 
+
+    <!-- Progressbar.js library -->
+    <script type="text/javascript" src="dist/js/progressbar.js"></script> 
+
+    <script>          
+        // Waiting to phoneGAP ready 
+        function onLoad() {
+            document.addEventListener("deviceready", onDeviceReady(), false);
+        }
+    
+        // Cordova API is available
+        function onDeviceReady() {
+            $(document).ready(function() { 
+                console.log("index.onDeviceReady");  
+                $(window).load(function() {
+                    console.log("index.window.load");
+                    if (localStorage.getItem("dni") === null || localStorage.getItem("dni") === "") {               
+                        window.location = "pages/registeredUser.html";
+                    } else {
+                        // Check if ambulance was ordered more than 6 hours ago
+                        checkAmbulanceServiceTime();
+                        // Update ambulance service
+                        infoAmbulance();
+                        // Show patient info 
+                        showPatient();
+
+                        //$("#dniJumbotron").append("<p class='text-center'>Acerque su dispositivo móvil a la pegatina NFC</p>");
+                        //$("#dniJumbotron").append("<button type='button' class='btn btn-success btn-lg' data-toggle='modal' data-target='#nfcALERT'>Solicitar</button>");
+                        /****************************************************************************************************************************************************/
+                        //  DEBUG Code                        
+                        // Read NFC tag
+                        //window.addEventListener("load", initReadNFC,false);
+                        //readNFCTag();  /* ERROR: No reconoce el tipo tag */                                                                               
+                        //discoverTag(); /* FUNCIONA */
+                        //initNdefListener(); /* FUNCIONA */
+                        /****************************************************************************************************************************************************/
+                        // check if is NFC Device                
+                        /*nfc.enabled(
+                            function () {
+                                console.log("index.nfc.enabled.success");
+                                initMimeTypeListener();           
+                            },
+                            function (errorCode) {
+                                console.log("index.nfc.enabled.failure");
+                                var err = errorCode;
+
+                                switch (err) {
+                                    case "NO_NFC":
+                                        console.log("index.nfc.NO_NFC");                    
+                                        location.href = "pages/error.html"; 
+                                        break; 
+                                    case "NFC_DISABLED":
+                                        console.log("index.nfc.NFC_DISABLED");                                
+                                        //DEBUG: volver al principio                                                                                              
+                                        break;
+                                    default:
+                                        console.log("index.nfc.DEFAULT");
+                                }                    
+                            }             
+                        );*/
+                    }
+                    // CREATE FUNCTION TO CHECK IF AMBULANCE IS OUT OF DATE
+                    if (localStorage.getItem("serviceTime") != null && localStorage.getItem("serviceTime") != "") {
+                        var serviceTime = new Date(parseInt(localStorage.getItem("serviceTime")));
+                        //serviceTime.setTime(parseInt(localStorage.getItem("serviceTime")));   
+
+                        $("#getAmbulanceButton").empty();
+                        $("#getAmbulanceButton").append(
+                            "<div class='alert alert-info' role='alert'>" +
+                                "<a class='text-right' href='javascript:showAmbulanceInfo();''>" + 
+                                "<span class='glyphicon glyphicon-eye-open' aria-hidden='true'></span>   " +  
+                                "Ambulancia solicitada: <strong>" 
+                                    + serviceTime.toLocaleTimeString() + " (" + serviceTime.toLocaleDateString() + ")</strong></a>" + 
+                            "</div>"
+                        );    
+                        $("#claimAndCancelButton").append(
+                            "<a class='btn btn-warning btn-lg pull-right' href='javascript:showClaimMODAL();'' role='button'>" + 
+                            "Reclamar</a>" + 
+                            "<a class='btn btn-danger btn-lg pull-left' href='javascript:showCancelMODAL();'' role='button'>" + 
+                            "Cancelar</a>");
+                    } else {
+                        $("#claimAndCancelButton").empty();
+                        $("#getAmbulanceButton").append(
+                        "<a class='btn btn btn-success btn-lg btn-block' href='javascript:showCloseMODAL();'' role='button'>" + 
+                        "Solicitar ambulancia</a>");
+                    }
+                });                    
+            });
+        }
+
+        function getAmbulance() {
+            // FIRST check if is NFC Device
+            console.log("index.getAmbulance");
+            nfc.enabled(
+                function () {
+                    console.log("index.getAmbulance.nfc.enabled.success");
+                    $('#trasanoMODAL').modal('show');
+                    initMimeTypeListener(function(){
+                        console.log("index.getAmbulance.initMimeTypeListener.callback.function");
+                    });           
+                },
+                function (errorCode) {
+                    console.log("index.getAmbulance.nfc.enabled.failure");
+                    var err = errorCode;
+
+                    switch (err) {
+                        case "NO_NFC":
+                            console.log("index.getAmbulance.nfc.NO_NFC");                    
+                            location.href = "pages/error.html"; 
+                            break; 
+                        case "NFC_DISABLED":
+                            console.log("index.getAmbulance.nfc.NFC_DISABLED");                                
+                            //DEBUG: volver al principio
+                            activateNFC();                                                                                              
+                            break;
+                        default:
+                            console.log("index.getAmbulance.nfc.DEFAULT");
+                    }                    
+                }             
+            );
+        }
+    </script>
+    
+    <title>TraSANO</title>
+</head>
+
+<body onLoad="javascript:onLoad();">
+    <!-- Fixed navbar -->
+    <nav class="navbar navbar-default navbar-static-top" role="navigation">
+        <div class="container">          
+            <a class="navbar-brand pull-right" href="pages/user.html">
+                    <span class="glyphicon glyphicon-user"></span> 
+            </a>
+            <!-- LOGO MÁS PEQUEÑO -->           
+            <!-- <a class="navbar-brand" href="#"><img style="display: inline-block; height: 30px; margin-top: -5px" src="img/salud-madrid-logo.png" alt="TraSANO"></a>    -->      
+            <a class="navbar-brand" href="#"><img style="display: inline-block; height: 40px; margin-top: -10px" src="img/salud-madrid-logo.png" alt="TraSANO"></a>
+        </div>
+    </nav>
+    <!-- Fixed navbar --> 
+    
+    <!-- Container -->
+    <div class="container">
+        <div class="page-header text-center">
+            <h1>SERVICIO</h1>
+        </div>
+        <div class="jumbotron" id="dniJumbotron"></div> 
+        <!-- <hr> -->      
+        <div id="getAmbulanceButton"></div>
+        <!-- <hr> --> 
+        <div id="claimAndCancelButton"></div>     
+    </div> 
+    <!-- /container -->  
+
+    <!-- Modal -->
+    <div class="modal fade" id="trasanoMODAL" tabindex="-1" role="dialog" aria-labelledby="trasanoMODALLabel">
+        <div class="modal-dialog modal-sm" role="document">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <div id="trasanoModalHeader">
+                    </div>
+                </div>
+                <div class="modal-body">
+                    <div id="trasanoModalBody"></div>
+                </div>
+                <div class="modal-footer">
+                    <div id="trasanoModalFooter"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <!-- /modal -->
+
+    <footer class="footer">
+        <div class="container">
+            <p class="text-muted pull-right">&copy; 2016 Trasano.</p>
+        </div>
+    </footer>
+
+    <!-- Bootstrap core JavaScript -->
+    <script src="dist/js/bootstrap.min.js"></script>
+    <!-- ================================================== -->
+</body>
+
+</html>

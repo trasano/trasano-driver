@@ -1,0 +1,20 @@
+body {
+  width: 100%; 
+  min-height: 100vh;
+  overflow:hidden;
+  position: relative;
+}
+html, body {
+  overflow-x: hidden;
+}
+.navbar-static-top {
+  margin-bottom: 19px;
+}
+.footer {
+    position: absolute;
+    bottom: 0;
+    width: 100%;
+    /* Set the fixed height of the footer here */
+    height: 30px;
+    background-color: #f5f5f5;
+}
